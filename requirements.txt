@@ -1,0 +1,6 @@
+# Core Dependencies
+openai
+python-dotenv
+
+# Streamlit (for web interface)
+streamlit
