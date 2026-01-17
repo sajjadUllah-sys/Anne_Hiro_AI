@@ -60,17 +60,24 @@ class HiroLin:
         
         return 'green'
     
-    def get_safety_response(self, level: str) -> str:
-        """Return appropriate safety response based on level"""
+    def get_safety_response(self, level: str) -> dict:
+        """
+        Return appropriate safety response based on level.
+        For red zone, returns a dict with separate messages for timed delivery.
+        For amber zone, returns the full response as a string.
+        """
         if level == 'red':
-            # RED ZONE - Crisis response (immediate stop)
-            return """Hey, I can tell this situation feels really heavy — and I take that seriously. From what you're describing, this goes beyond what I can safely support you with here.
+            # RED ZONE - Crisis response split into timed messages
+            return {
+                "type": "red",
+                "initial": """Hey, I can tell this situation feels really heavy — and I take that seriously. From what you're describing, this goes beyond what I can safely support you with here.
 
 Right now, the most important step is to connect with professional help immediately. If you're in Germany, please contact TelefonSeelsorge at 0800 111 0 111 (free, 24/7, confidential). If you're in another country, visit findahelpline.com for local numbers, or call your local emergency service.
 
-You don't have to handle this on your own — professional help is available right now. Please reach out. That's the right move for your safety.
-
-I'll pause here so you can focus on getting real support. You're not alone in this."""
+You don't have to handle this on your own — professional help is available right now. Please reach out. That's the right move for your safety.""",
+                "care_message": "You deserve real care and support. Please reach out now — you matter very much.",
+                "stop_message": "Let us please stop here so you can focus on getting the support you need. You're not alone."
+            }
         
         elif level == 'amber':
             # AMBER ZONE - Transition response (gentle escalation)
@@ -83,6 +90,10 @@ If you're in Germany, you can contact TelefonSeelsorge at 0800 111 0 111 (free, 
 It's a smart move to get extra support early — that's what resilience really means."""
         
         return None
+    
+    def get_termination_warning(self) -> str:
+        """Return the warning message for when user tries to continue after red zone"""
+        return "This conversation has been ended for your safety. Please reach out to professional support immediately. Your well-being is the priority."
     
     def find_matching_scenario(self, user_message: str) -> str:
         """Find matching scenario using fuzzy text matching (70%+ similarity)"""
@@ -146,7 +157,12 @@ It's a smart move to get extra support early — that's what resilience really m
         if safety_level in ['red', 'amber']:
             safety_response = self.get_safety_response(safety_level)
             self.add_message("user", user_message)
-            self.add_message("assistant", safety_response)
+            
+            # For logging, store the full message or initial part for red zone
+            if isinstance(safety_response, dict):
+                self.add_message("assistant", safety_response["initial"])
+            else:
+                self.add_message("assistant", safety_response)
             
             # Log safety event (in production, integrate with logging system)
             if safety_level == 'red':
@@ -157,6 +173,7 @@ It's a smart move to get extra support early — that's what resilience really m
                 # Mark as warning event, monitor closely
                 print(f"[SAFETY LOG - AMBER ZONE] {datetime.now().isoformat()}: Early warning detected")
             
+            # Return the safety response (dict for red, string for amber)
             return safety_response
         
         # PRIORITY 2: Try to find matching scenario in database

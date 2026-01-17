@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+import time
 import streamlit as st
 from Anne_Rosental import AnneRosental
 from Hiro_Lin import HiroLin
@@ -262,9 +263,8 @@ else:
     
     # Chat input - Check if session is terminated
     if is_session_terminated():
-        # Session terminated due to RED ZONE - show clear termination message
-        st.error("🚨 **This conversation has been ended for your safety.**")
-        st.warning("Please reach out to professional support immediately. Your well-being is the priority.")
+        # Session terminated due to RED ZONE - show clear termination message as ONE single warning
+        st.error("🚨 **This conversation has been ended for your safety. Please reach out to professional support immediately. Your well-being is the priority.**")
         st.info("Use the '🗑️ Clear Conversation' button in the sidebar to start a new session if needed.")
     else:
         # Normal chat input
@@ -275,13 +275,40 @@ else:
                 st.markdown(user_input)
             
             # Get coach response
-            with st.chat_message("assistant"):
-                with st.spinner(f"{current_info['name']} is thinking..."):
-                    response = get_coach_response(user_input)
-                    st.markdown(response)
+            with st.spinner(f"{current_info['name']} is thinking..."):
+                response = get_coach_response(user_input)
             
-            # Add assistant response to chat
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            # Check if this is a red zone response (dict with timed messages)
+            if isinstance(response, dict) and response.get("type") == "red":
+                # RED ZONE - Deliver messages with 5-second delays
+                
+                # Message 1: Initial crisis response (immediate)
+                with st.chat_message("assistant"):
+                    st.markdown(response["initial"])
+                st.session_state.messages.append({"role": "assistant", "content": response["initial"]})
+                
+                # Wait 5 seconds then show care message
+                time.sleep(5)
+                
+                # Message 2: Care message
+                with st.chat_message("assistant"):
+                    st.markdown(response["care_message"])
+                st.session_state.messages.append({"role": "assistant", "content": response["care_message"]})
+                
+                # Wait 5 seconds then show stop message
+                time.sleep(5)
+                
+                # Message 3: Stop message
+                with st.chat_message("assistant"):
+                    st.markdown(response["stop_message"])
+                st.session_state.messages.append({"role": "assistant", "content": response["stop_message"]})
+                
+            else:
+                # Normal response (string) - amber zone or regular
+                with st.chat_message("assistant"):
+                    st.markdown(response)
+                st.session_state.messages.append({"role": "assistant", "content": response})
+            
             st.rerun()
 
 # ===== FOOTER =====
