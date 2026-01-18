@@ -202,32 +202,40 @@ def display_chat_header(coach_key):
 def start_chat_session(coach_key, coach_instance):
     """Start chat session with selected coach"""
     coach_name = COACH_INFO[coach_key]['name']
-    
+    import time
     display_chat_header(coach_key)
-    
-    # Welcome message
     print(f"{coach_name}: Hello! I'm here to support you. What's on your mind today?\n")
-    
+
+    session_terminated = False
+    safety_flag = False
+    risk_level = None
+
     while True:
         user_input = input("You: ").strip()
-        
+
+        if session_terminated:
+            # Block all further input after safety protocol
+            block_msg = coach_instance.get_termination_warning() if hasattr(coach_instance, 'get_termination_warning') else "This conversation has been ended for your safety. Please reach out to professional support immediately. Your well-being is the priority."
+            print(f"\n{coach_name}: {block_msg}\n")
+            continue
+
         if not user_input:
             continue
-        
+
         # Handle commands
         if user_input.lower() == 'back':
-            print("\n↩️  Returning to coach selection...\n")
+            print("\n\u21a9\ufe0f  Returning to coach selection...\n")
             break
-        
+
         elif user_input.lower() == 'exit':
-            print("\n👋 Thank you for using the AI Coaching Platform. Goodbye!\n")
+            print("\n\ud83d\udc4b Thank you for using the AI Coaching Platform. Goodbye!\n")
             return 'exit'
-        
+
         elif user_input.lower() == 'history':
             history = coach_instance.get_conversation_history()
             clear_screen()
             display_header()
-            print(f"\n📊 CONVERSATION HISTORY - {coach_name}".center(70))
+            print(f"\n\ud83d\udcca CONVERSATION HISTORY - {coach_name}".center(70))
             print("="*70)
             if history:
                 for msg in history:
@@ -241,36 +249,55 @@ def start_chat_session(coach_key, coach_instance):
             input("\nPress Enter to continue...")
             display_chat_header(coach_key)
             continue
-        
+
         elif user_input.lower() == 'clear':
             coach_instance.reset_conversation()
-            print("\n🔄 Conversation cleared!\n")
+            print("\n\ud83d\udd04 Conversation cleared!\n")
             display_chat_header(coach_key)
             continue
-        
+
         elif user_input.lower() == 'starters':
             display_conversation_starters(coach_key)
             display_chat_header(coach_key)
             continue
-        
+
         elif user_input.lower() == 'scenarios':
             display_scenario_responses(coach_key)
             display_chat_header(coach_key)
             continue
-        
+
         elif user_input.lower() == 'safety':
             display_safety_info()
             input("\nPress Enter to continue...")
             display_chat_header(coach_key)
             continue
-        
+
         # Get coach response
         try:
             response = coach_instance.get_response(user_input)
+
+            # Handle safety protocol for red zone
+            if isinstance(response, dict) and response.get("type") == "red":
+                # Stage 1: Immediate
+                print(f"\n{coach_name}: {response['initial']}\n")
+                # Logging
+                safety_flag = True
+                risk_level = "crisis"
+                print(f"[SAFETY LOG] safety_flag: {safety_flag}, risk_level: {risk_level}, timestamp: {time.strftime('%Y-%m-%dT%H:%M:%S')}")
+                # Stage 2: 5-second delay
+                time.sleep(5)
+                print(f"\n{coach_name}: {response['care_message']}\n")
+                # Stage 3: 5-second delay
+                time.sleep(5)
+                print(f"\n{coach_name}: I'll stop here so you can focus on getting the support you need. You're not alone.\n")
+                session_terminated = True
+                continue
+
+            # Amber zone (warning) or normal
             print(f"\n{coach_name}: {response}\n")
         except Exception as e:
-            print(f"\n❌ Error: {str(e)}\n")
-    
+            print(f"\n\u274c Error: {str(e)}\n")
+
     return 'continue'
 
 # ===== MAIN FUNCTION =====
