@@ -202,22 +202,11 @@ def display_chat_header(coach_key):
 def start_chat_session(coach_key, coach_instance):
     """Start chat session with selected coach"""
     coach_name = COACH_INFO[coach_key]['name']
-    import time
     display_chat_header(coach_key)
     print(f"{coach_name}: Hello! I'm here to support you. What's on your mind today?\n")
 
-    session_terminated = False
-    safety_flag = False
-    risk_level = None
-
     while True:
         user_input = input("You: ").strip()
-
-        if session_terminated:
-            # Block all further input after safety protocol
-            block_msg = coach_instance.get_termination_warning() if hasattr(coach_instance, 'get_termination_warning') else "This conversation has been ended for your safety. Please reach out to professional support immediately. Your well-being is the priority."
-            print(f"\n{coach_name}: {block_msg}\n")
-            continue
 
         if not user_input:
             continue
@@ -276,21 +265,11 @@ def start_chat_session(coach_key, coach_instance):
         try:
             response = coach_instance.get_response(user_input)
 
-            # Handle safety protocol for red zone
+            # Handle safety protocol for red zone - return dict for backend to handle
             if isinstance(response, dict) and response.get("type") == "red":
-                # Stage 1: Immediate
+                # Return the structured response for backend to handle timing and termination
                 print(f"\n{coach_name}: {response['initial']}\n")
-                # Logging
-                safety_flag = True
-                risk_level = "crisis"
-                print(f"[SAFETY LOG] safety_flag: {safety_flag}, risk_level: {risk_level}, timestamp: {time.strftime('%Y-%m-%dT%H:%M:%S')}")
-                # Stage 2: 5-second delay
-                time.sleep(5)
-                print(f"\n{coach_name}: {response['care_message']}\n")
-                # Stage 3: 5-second delay
-                time.sleep(5)
-                print(f"\n{coach_name}: I'll stop here so you can focus on getting the support you need. You're not alone.\n")
-                session_terminated = True
+                # Backend will handle: 5-second delay, care_message, stop_message, and termination
                 continue
 
             # Amber zone (warning) or normal

@@ -1,30 +1,18 @@
+
 # Copilot Instructions for Anne_Lin Project
 
 ## Project Overview
-The Anne_Lin project appears to be a conversational AI system designed to provide emotionally resonant and psychologically informed responses. The system emphasizes natural, human-like interactions and avoids repetitive or overly templated communication patterns.
+Anne_Lin is a conversational AI system focused on emotionally resonant, psychologically informed responses. The architecture is persona-driven, with each persona (e.g., Anne Rosental, Hiro Lin) defined by its own logic and communication rules. The system is designed for natural, non-repetitive dialogue and is accessible via a Streamlit web interface.
 
-### Key Components
-- **`main.py`**: Likely the entry point of the application.
-- **`Anne_Rosental.py` and `Hiro_Lin.py`**: Core modules, possibly defining distinct personas or conversational styles.
-- **`*_prompt.py` files**: Contain communication rules and psychological principles guiding the AI's conversational tone and structure.
-- **`conversation_database.py`**: Manages data storage or retrieval for conversations.
-- **`streamlit_app.py`**: Provides a web interface for interacting with the AI.
-
-### Communication Rules
-- Avoid repetitive nicknames like "dear" or overusing the user's name.
-- Use the user's name sparingly (every 6-7 responses at most).
-- Vary response structures to prevent templated conversations.
-- Limit metaphors to 1 in every 3-4 responses.
-- Acknowledge understanding in one sentence only; avoid repetitive phrases like "I understand."
-- Maintain a professional, human-like tone without heavy jargon.
-
-### Psychological Principles
-- Focus on emotional resonance and validation.
-- Help users integrate emotions rather than suppress them.
-- Foster self-soothing, self-compassion, and inner calm.
+## Architecture & Key Components
+- **main.py**: Application entry point; likely routes requests and initializes personas.
+- **Anne_Rosental.py / Hiro_Lin.py**: Define core persona logic and response generation. Each persona is guided by its own `*_prompt.py` file.
+- **Anne_Rosental_prompt.py / Hiro_Lin_prompt.py**: Contain persona-specific communication rules and psychological principles. These files are the canonical source for conversational style and validation logic.
+- **conversation_database.py**: Handles storage and retrieval of conversation data, supporting context continuity.
+- **streamlit_app.py**: Launches the Streamlit web UI for user interaction.
 
 ## Developer Workflows
-### Setting Up the Environment
+### Environment Setup
 1. Activate the virtual environment:
    ```powershell
    & .venv\Scripts\Activate.ps1
@@ -35,33 +23,35 @@ The Anne_Lin project appears to be a conversational AI system designed to provid
    ```
 
 ### Running the Application
-- To start the Streamlit app:
+- Start the web interface:
   ```bash
   streamlit run streamlit_app.py
   ```
 
-### Testing
-- Ensure all modules adhere to the communication rules outlined in the `*_prompt.py` files.
-- Validate that the AI's responses align with the psychological principles.
+### Testing & Validation
+- Manually validate persona responses in the Streamlit UI.
+- Ensure all changes to persona logic or prompts are consistent with the rules in the relevant `*_prompt.py` file.
 
 ## Project-Specific Conventions
-- Follow the communication rules strictly to maintain the intended conversational tone.
-- Use the `*_prompt.py` files as the source of truth for conversational guidelines.
-- Ensure any updates to the AI's behavior are consistent with the psychological principles.
+- **Conversational Rules**: Avoid repetitive nicknames, overuse of names, and templated phrasing. Use metaphors sparingly (max 1 in 3-4 responses). Acknowledge understanding in a single sentence. Maintain a professional, human-like tone.
+- **Persona Guidance**: All persona logic must reference its `*_prompt.py` for rules and principles. Do not hardcode rules in multiple places.
+- **Psychological Principles**: Focus on emotional resonance, validation, and fostering self-compassion. Avoid suppression of emotions.
+
+## Integration & Data Flow
+- All user interactions flow through the Streamlit UI to the selected persona module, which generates responses using its prompt rules. Conversation history is managed by `conversation_database.py`.
+- No external APIs are called by default; all logic is local unless extended.
 
 ## External Dependencies
 - **Streamlit**: For the web interface.
-- **Python packages**: Listed in `requirements.txt`.
+- **Python packages**: See `requirements.txt` for the full list.
 
 ## Examples
-### Response Structure
 **Correct:**
-- "That's a powerful realization, Sarah."
+> "That's a powerful realization, Sarah."
 
 **Incorrect:**
-- "Dear, I understand..." (too condescending)
-- "Sarah, Sarah, I hear you Sarah" (overuse of name)
+> "Dear, I understand..." (condescending)
+> "Sarah, Sarah, I hear you Sarah" (overuse of name)
 
 ---
-
-This document is a living guide. Update it as the project evolves to ensure AI agents remain productive and aligned with the project's goals.
+Update this guide as the project evolves. For new personas or workflows, document conventions and integration points here.

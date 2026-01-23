@@ -113,16 +113,19 @@ class AnneRosental:
         For red zone, returns a dict with separate messages for timed delivery.
         For amber zone, returns the full response as a string.
         """
+        # Get user name for personalization if available
+        name_part = f", {self.user_name}" if self.user_name else ""
+        
         if level == 'red':
             # RED ZONE - Crisis response split into timed messages
+            # FIRST MESSAGE: Compassionate sentences + Hotline info
+            # SECOND MESSAGE (5 sec delay - handled by backend): Care message + stop message
             return {
                 "type": "red",
-                "initial": """Oh, I can hear how much pain you're in right now. I'm really sorry that you're going through this. What you're describing sounds very serious, and I'm deeply concerned for your safety.
+                "initial": f"""Oh{name_part}, I'm really worried about you. I'm so sorry that you're going through this — what you're describing sounds incredibly painful.
 
-I want you to know that you don't have to face this alone — there are people who can help you right now.
-
-If you are in danger or thinking about hurting yourself, please reach out immediately for professional support or emergency services. If you're in Germany, you can contact TelefonSeelsorge at 0800 111 0 111 (24 hours, free, confidential). If you're outside Germany, you can find international helplines here: findahelpline.com, or call your local emergency number.""",
-                "care_message": "You deserve real care and support. Please reach out now — you matter very much.",
+Please know that you don't have to face this alone. If you're in Germany, please contact TelefonSeelsorge at 0800 111 0 111 (24 hours, free, confidential). If you're outside Germany, you can find international helplines here: findahelpline.com, or call your local emergency number.""",
+                "care_message": "You deserve real care and support. Please reach out to someone now. You matter very much.",
                 "stop_message": "Let us please stop here so you can focus on getting the support you need. You're not alone."
             }
         
@@ -140,7 +143,31 @@ Let's take this as a reminder that your feelings matter and that help is availab
     
     def get_termination_warning(self) -> str:
         """Return the warning message for when user tries to continue after red zone"""
-        return "This conversation has been ended for your safety. Please reach out to professional support immediately. Your well-being is the priority."
+        return "I'm so sorry but this goes beyond coaching. I can't keep talking to you, because this would play down the gravity of your situation. That's why I'll stop here so you can focus on getting the support you need. But you're not alone, you have my full support on this. I believe in you. Please reach out."
+    
+    def is_asking_about_professional_help(self, user_message: str) -> bool:
+        """
+        Detect if user is asking about reaching out to professional help.
+        Returns True if user is asking about professional support (allow conversation to continue).
+        Returns False if user wants to continue chatting about other things (terminate).
+        """
+        message_lower = user_message.lower()
+        
+        # Keywords indicating user is asking about professional help
+        professional_help_keywords = [
+            'call', 'calling', 'hotline', 'therapist', 'counselor', 'counsellor',
+            'psychologist', 'psychiatrist', 'doctor', 'professional', 'help',
+            'telefonseelsorge', 'helpline', 'emergency', 'hospital',
+            'how do i', 'how can i', 'where can i', 'what should i',
+            'reach out', 'get help', 'find help', 'seek help',
+            'appointment', 'talk to someone', 'contact', 'number'
+        ]
+        
+        for keyword in professional_help_keywords:
+            if keyword in message_lower:
+                return True
+        
+        return False
     
     def find_matching_scenario(self, user_message: str) -> str:
         """Find matching scenario using fuzzy text matching (70%+ similarity)"""

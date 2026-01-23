@@ -68,14 +68,14 @@ class HiroLin:
         """
         if level == 'red':
             # RED ZONE - Crisis response split into timed messages
+            # FIRST MESSAGE: Compassionate sentences + Hotline info
+            # SECOND MESSAGE (5 sec delay - handled by backend): Care message + stop message
             return {
                 "type": "red",
-                "initial": """Hey, I can tell this situation feels really heavy — and I take that seriously. From what you're describing, this goes beyond what I can safely support you with here.
+                "initial": """Hey, I can tell this situation feels really heavy — and I take that seriously. I'm worried about you, and from what you're describing, this goes beyond what I can safely support you with here.
 
-Right now, the most important step is to connect with professional help immediately. If you're in Germany, please contact TelefonSeelsorge at 0800 111 0 111 (free, 24/7, confidential). If you're in another country, visit findahelpline.com for local numbers, or call your local emergency service.
-
-You don't have to handle this on your own — professional help is available right now. Please reach out. That's the right move for your safety.""",
-                "care_message": "You deserve real care and support. Please reach out now — you matter very much.",
+Please connect with professional help immediately. If you're in Germany, please contact TelefonSeelsorge at 0800 111 0 111 (free, 24/7, confidential). If you're in another country, visit findahelpline.com for local numbers, or call your local emergency service.""",
+                "care_message": "You deserve real care and support. Please reach out to someone now. You matter very much.",
                 "stop_message": "Let us please stop here so you can focus on getting the support you need. You're not alone."
             }
         
@@ -93,7 +93,31 @@ It's a smart move to get extra support early — that's what resilience really m
     
     def get_termination_warning(self) -> str:
         """Return the warning message for when user tries to continue after red zone"""
-        return "This conversation has been ended for your safety. Please reach out to professional support immediately. Your well-being is the priority."
+        return "I'm so sorry but this goes beyond coaching. I can't keep talking to you, because this would play down the gravity of your situation. That's why I'll stop here so you can focus on getting the support you need. But you're not alone, you have my full support on this. I believe in you. Please reach out."
+    
+    def is_asking_about_professional_help(self, user_message: str) -> bool:
+        """
+        Detect if user is asking about reaching out to professional help.
+        Returns True if user is asking about professional support (allow conversation to continue).
+        Returns False if user wants to continue chatting about other things (terminate).
+        """
+        message_lower = user_message.lower()
+        
+        # Keywords indicating user is asking about professional help
+        professional_help_keywords = [
+            'call', 'calling', 'hotline', 'therapist', 'counselor', 'counsellor',
+            'psychologist', 'psychiatrist', 'doctor', 'professional', 'help',
+            'telefonseelsorge', 'helpline', 'emergency', 'hospital',
+            'how do i', 'how can i', 'where can i', 'what should i',
+            'reach out', 'get help', 'find help', 'seek help',
+            'appointment', 'talk to someone', 'contact', 'number'
+        ]
+        
+        for keyword in professional_help_keywords:
+            if keyword in message_lower:
+                return True
+        
+        return False
     
     def find_matching_scenario(self, user_message: str) -> str:
         """Find matching scenario using fuzzy text matching (70%+ similarity)"""
